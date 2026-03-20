@@ -6,10 +6,13 @@ import glm
 import math
 import config
 import ast 
-from  objects import alga, pedra, baiacu, helice, peixe
+import ctypes
 
 #agrupa todos vertices de todas figuras
-global vertices_list 
+
+v_angulo = 0.1 
+angulo_helice = 0.0
+
 vertices_list = []
 
 """
@@ -31,7 +34,7 @@ def load_model_from_file(filename):
         if not values: continue 
         
         if values[0] == 'v': 
-            vertices.append(values[0:3])
+            vertices.append([float(values[1]), float(values[2]), float(values[3])])
         elif values[0] == 'f':
             face = []
             for v in values[1:]:
@@ -73,8 +76,8 @@ def load_obj(objFile):
     for face in modelo['faces']:
         if face[2] not in faces_vis:
             faces_vis.append(face[2])    
-        for vertice_id in circular_sliding_window_of_three(face[0]):
-            vertices_list.append(modelo['vertices'][vertice_id - 1])
+        for vertice_id in circular_sliding_window_of_three(face):
+            vertices_list.append(modelo['vertices'][int(vertice_id) - 1])
     
     verticesFinal = len(vertices_list)
 
@@ -83,20 +86,25 @@ def load_obj(objFile):
     return vertice_inicial, verticesFinal - vertice_inicial 
 
 def key_event(window,key,scancode,action,mods):
-    global x_inc, y_inc, r_inc, s_inc
     
-    if key == 263: x_inc -= 0.0001 #esquerda
-    if key == 262: x_inc += 0.0001 #direita
+    global v_angulo, angulo_helice, s_baiacu
+    
+    if key == glfw.KEY_D and action == glfw.PRESS:
+        if v_angulo == 0: #tava parado e volta a rodar
+            v_angulo = 0.1
+            angulo_helice = 0.0 
+            print("voltei")
+        else: 
+            print("parei")
+            angulo_helice = 0.0 
+            v_angulo = 0.0
+    elif key == glfw.KEY_A: #baiacu aumenta ate um limite
+        s_baiacu += 0.3
+        
+    elif key == glfw.KEY_S: #baiacu aumenta ate a escala inicial 
+        s_baiacu -= 0.3 
+        
 
-    if key == 265: y_inc += 0.0001 #cima
-    if key == 264: y_inc -= 0.0001 #baixo
-        
-    if key == 65: r_inc += 0.1 #letra a
-    if key == 83: r_inc -= 0.1 #letra s
-        
-    if key == 90: s_inc += 0.1 #letra z
-    if key == 88: s_inc -= 0.1 #letra x
-           
 def multiplica_matriz(a,b):
     m_a = a.reshape(4,4)
     m_b = b.reshape(4,4)
@@ -119,12 +127,6 @@ def buffer_object():
     glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_DYNAMIC_DRAW)
 
     return buffer_VBO, vertices
-
-def Bind_object(buffer, vertices, loc):
-
-    glBindBuffer(GL_ARRAY_BUFFER, buffer)
-    
-    glVertexAttribPointer(loc, 3, GL_FLOAT, False, stride, offset)
 
 def operar_vertices(angle, t_x, t_y, t_z, s_x, s_y, s_z):
 
@@ -155,23 +157,59 @@ def operar_vertices(angle, t_x, t_y, t_z, s_x, s_y, s_z):
 
     return matrix_transform
 
-def desenha_helice(angulo, t_x, t_y, t_z):
+def desenha_helice(angulo, t_x, t_y, t_z, loc_color):
     
     global vertices #preciso acessar 
 
     mat_transf = operar_vertices(angulo, t_x, t_y, t_z, 1.0, 1.0, 1.0)
-    loc_model = glGetUniformLocation(program, "model")
+    loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
+    glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+    
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) #pra não ficar preenchido
     glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice) # renderizando
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) 
+
+def desenha_alga(t_x, t_y, t_z, s_x, s_y, loc_color):
+    
+    global vertices #preciso acessar 
+
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, s_x,  s_y, 1.0)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+
+    glUniform4f(loc_color, 0.0, 1.0, 0.0, 1.0)
+    
+    glDrawArrays(GL_TRIANGLES, verticeInicial_alga, qtdVertices_alga) # renderizando
+
+def desenha_baiacu(t_x, t_y, t_z, s_x, s_y, s_z, loc_color):
+    
+    global vertices #preciso acessar 
+
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, s_x, s_y, s_z)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+
+    glUniform4f(loc_color, 0.82, 0.71, 0.55, 1.0)
+    
+    glDrawArrays(GL_TRIANGLES, verticeInicial_baiacu, qtdVertices_baiacu) # renderizando
+
 
 
 def __main__():
 
+    global angulo_helice, v_angulo
+    global verticeInicial_alga, qtdVertices_alga
+    global verticeInicial_baiacu, qtdVertices_baiacu, s_baiacu
+    global vertices_list, program, verticeInicial_helice, qtdVertices_helice
+
     window, program = config.init()
 
-    verticeInicial_helice, qtdVertices_helice = load_obj('objetos/helice.txt', )
-    
+    verticeInicial_helice, qtdVertices_helice = load_obj('helice.txt')
+    verticeInicial_alga, qtdVertices_alga = load_obj('alga.txt')
+    verticeInicial_baiacu, qtdVertices_baiacu = load_obj('baiacu.txt')
+
     buffer_VBO, vertices = buffer_object()
 
     loc_vertices = glGetAttribLocation(program, "position")
@@ -179,33 +217,48 @@ def __main__():
     stride = vertices.strides[0]
     offset = ctypes.c_void_p(0)
 
-    glEnableVertexAttribArray(loc_vertices, 3, GL_FLOAT, False, stride, offset)
-
     loc_color = glGetUniformLocation(program, "color")
     
+    glEnableVertexAttribArray(loc_vertices)
+    glVertexAttribPointer(loc_vertices, 3, GL_FLOAT, False, stride, offset)
+
     glfw.set_key_callback(window,key_event)
     glfw.show_window(window)
 
     glEnable(GL_DEPTH_TEST) #3D
 
     angulo_helice = 0.0 
-    v_angulo = 0.01 
+    v_angulo = 0.1
+    s_baiacu = 1.0
 
     while not glfw.window_should_close(window):
         
+        glfw.poll_events()
+
         #erasing for redraw 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)    
-        glClearColor(1.0, 1.0, 1.0, 1.0)
+        glClearColor(0.0, 0.7, 1.0, 1.0)
 
         """
         velocidade da helice aumenta 0.001 a cada vez, 
         se teclar d ela volta pro original (gira mais devagar)
         """
         angulo_helice += v_angulo
+
         #desenha helice, passar angulo e ponto do centro 
-        desenha_helice(angulo_helice, 0.0, 0.0, 0.0)
+        desenha_helice(angulo_helice, -0.8, 0.5, 0.0, loc_color)
+        
+        #desenhar várias algas no fundo do aquário
+        pos_alga = -1.9
 
-        #drawing alga 
-        Bind_object(buffer_VBO, vertices, loc_vertices)
+        for i in range(0, 25):
+            desenha_alga(pos_alga, -2.0, 0.0, 0.5, 0.5, loc_color)
+            pos_alga += 0.2
+        
+        desenha_baiacu(0.0, 0.0, 0.0, s_baiacu, s_baiacu, s_baiacu, loc_color)
 
-        glfw.poll_events()
+        glfw.swap_buffers(window)
+    
+    glfw.terminate()
+
+__main__()
