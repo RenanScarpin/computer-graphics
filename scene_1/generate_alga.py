@@ -7,7 +7,7 @@ Argumentos:
 # largura inicial, ampltiude ("variação lateral"), 
 # frequencia (quantidade de ondulações), deslocamento da senoide, posição no eixo z 
 """
-def gerar_alga(altura=1.0, segmentos=30, largura=0.08, amplitude=0.2, frequencia=6.0, z=0.0):
+def gerar_alga(altura=0.9, segmentos=30, largura=0.08, amplitude=0.2, frequencia=6.0, z=0.0):
     
     vertices = []
     faces = []

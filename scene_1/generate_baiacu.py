@@ -1,5 +1,12 @@
 import math
 
+def normalizar(v):
+    x, y, z = v
+    norma = math.sqrt(x*x + y*y + z*z)
+    if norma == 0:
+        return [0.0, 0.0, 0.0]
+    return [x/norma, y/norma, z/norma]
+
 def gerar_esfera(raio=0.2, lat=20, lon=30):
     
     vertices = []
@@ -31,11 +38,52 @@ def gerar_esfera(raio=0.2, lat=20, lon=30):
 
     return vertices, faces
 
+def add_espinhos(vertices, faces, alt_espinho = 0.05, passo = 10):
+
+    novas_faces = []
+
+    for id, face in enumerate(faces):
+        a, b, c = face 
+        va = vertices[a]
+        vb = vertices[b]
+        vc = vertices[c]
+
+        #algumas faces com espinho
+        if id % passo == 0:
+
+            centro = [
+                (va[0] + vb[0] + vc[0]) / 3.0,
+                (va[1] + vb[1] + vc[1]) / 3.0,
+                (va[2] + vb[2] + vc[2]) / 3.0,
+            ]
+
+            dir = normalizar(centro)
+
+            ponta = [
+                centro[0] + dir[0]*alt_espinho,
+                centro[1] + dir[1]*alt_espinho,
+                centro[2] + dir[2]*alt_espinho,
+            ]
+
+            ind_ponta = len(vertices)
+            vertices.append(ponta)
+
+            novas_faces.append([a, b, ind_ponta])
+            novas_faces.append([b, c, ind_ponta])
+            novas_faces.append([c, a, ind_ponta])
+        else:
+            novas_faces.append(face)
+    
+    return vertices, novas_faces
+
+
 vertices_final, faces = gerar_esfera()
+vertices_final, faces = add_espinhos(vertices_final, faces)
 
 with open("baiacu.txt", "w", encoding="utf-8") as f:
     for x, y, z in vertices_final:
         f.write(f"v {x} {y} {z}\n")
 
     for a, b, c in faces:
-        f.write(f"f {a} {b} {c}\n")
+        f.write(f"f {a+1} {b+1} {c+1}\n")
+ 

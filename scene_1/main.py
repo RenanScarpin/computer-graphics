@@ -99,10 +99,12 @@ def key_event(window,key,scancode,action,mods):
             angulo_helice = 0.0 
             v_angulo = 0.0
     elif key == glfw.KEY_A: #baiacu aumenta ate um limite
-        s_baiacu += 0.3
+        s_baiacu += 0.05
+        s_baiacu = min(s_baiacu, 1.4)
         
     elif key == glfw.KEY_S: #baiacu aumenta ate a escala inicial 
-        s_baiacu -= 0.3 
+        s_baiacu -= 0.05
+        s_baiacu = max(s_baiacu, 0.7)
         
 
 def multiplica_matriz(a,b):
@@ -145,15 +147,15 @@ def operar_vertices(angle, t_x, t_y, t_z, s_x, s_y, s_z):
                                     math.sin(angle),  math.cos(angle), 0.0, 0.0, 
                                     0.0,      0.0, 1.0, 0.0, 
                                     0.0,      0.0, 0.0, 1.0], np.float32)
-
+    
     #matriz escala 
     mat_scale = np.array([          s_x,  0.0, 0.0, 0.0, 
                                     0.0,  s_y, 0.0, 0.0, 
                                     0.0,  0.0, s_z, 0.0, 
                                     0.0,  0.0, 0.0, 1.0], np.float32)
 
-    matrix_transform = multiplica_matriz(mat_translate, mat_rotation_z)
-    matrix_transform = multiplica_matriz(mat_scale, matrix_transform)
+    matrix_transform = multiplica_matriz(mat_rotation_z, mat_scale)
+    matrix_transform = multiplica_matriz(mat_translate, matrix_transform)
 
     return matrix_transform
 
@@ -187,20 +189,32 @@ def desenha_baiacu(t_x, t_y, t_z, s_x, s_y, s_z, loc_color):
     
     global vertices #preciso acessar 
 
-    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, s_x, s_y, s_z)
+    mat_transf = operar_vertices(90.0, t_x, t_y, t_z, s_x, s_y, s_z)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    glUniform4f(loc_color, 0.82, 0.71, 0.55, 1.0)
+    glUniform4f(loc_color, 0.95, 0.80, 0.35, 1.0)
     
     glDrawArrays(GL_TRIANGLES, verticeInicial_baiacu, qtdVertices_baiacu) # renderizando
 
+def desenha_pedra(t_x, t_y, t_z, loc_color):
+    
+    global vertices #preciso acessar 
+
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.3, 0.3, 0.3)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+
+    glUniform4f(loc_color, 0.5, 0.5, 0.5, 1.0)
+    
+    glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra) # renderizando
 
 
 def __main__():
 
     global angulo_helice, v_angulo
     global verticeInicial_alga, qtdVertices_alga
+    global verticeInicial_pedra, qtdVertices_pedra
     global verticeInicial_baiacu, qtdVertices_baiacu, s_baiacu
     global vertices_list, program, verticeInicial_helice, qtdVertices_helice
 
@@ -209,6 +223,8 @@ def __main__():
     verticeInicial_helice, qtdVertices_helice = load_obj('helice.txt')
     verticeInicial_alga, qtdVertices_alga = load_obj('alga.txt')
     verticeInicial_baiacu, qtdVertices_baiacu = load_obj('baiacu.txt')
+    verticeInicial_pedra, qtdVertices_pedra = load_obj('pedra.txt')
+
 
     buffer_VBO, vertices = buffer_object()
 
@@ -229,7 +245,7 @@ def __main__():
 
     angulo_helice = 0.0 
     v_angulo = 0.1
-    s_baiacu = 1.0
+    s_baiacu = 0.7
 
     while not glfw.window_should_close(window):
         
@@ -246,16 +262,19 @@ def __main__():
         angulo_helice += v_angulo
 
         #desenha helice, passar angulo e ponto do centro 
-        desenha_helice(angulo_helice, -0.8, 0.5, 0.0, loc_color)
+        desenha_helice(angulo_helice, -0.7, 0.5, 0.0, loc_color)
         
         #desenhar várias algas no fundo do aquário
         pos_alga = -1.9
 
-        for i in range(0, 25):
-            desenha_alga(pos_alga, -2.0, 0.0, 0.5, 0.5, loc_color)
-            pos_alga += 0.2
+        for i in range(0, 80):
+            desenha_alga(pos_alga, -1.0, 0.0, 0.5, 0.5, loc_color)
+            pos_alga += 0.06
         
-        desenha_baiacu(0.0, 0.0, 0.0, s_baiacu, s_baiacu, s_baiacu, loc_color)
+        desenha_baiacu(0.0, -0.5, 0.0, s_baiacu, s_baiacu, s_baiacu, loc_color)
+
+        desenha_pedra(-0.6, -0.9, 0.0, loc_color)
+        desenha_pedra(0.6, -0.9, 0.0, loc_color)
 
         glfw.swap_buffers(window)
     

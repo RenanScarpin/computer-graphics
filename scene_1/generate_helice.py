@@ -3,7 +3,7 @@ import numpy as np
 
 num_vertices = 100
 pi = math.pi
-radius = 0.1
+radius = 0.2
 
 #pontos do circulo 
 vertices = np.zeros((num_vertices, 3), dtype=np.float32)
