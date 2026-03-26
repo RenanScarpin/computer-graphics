@@ -100,7 +100,7 @@ def key_event(window,key,scancode,action,mods):
             v_angulo = 0.0
     elif key == glfw.KEY_A: #baiacu aumenta ate um limite
         s_baiacu += 0.05
-        s_baiacu = min(s_baiacu, 1.4)
+        s_baiacu = min(s_baiacu, 1.1)
         
     elif key == glfw.KEY_S: #baiacu aumenta ate a escala inicial 
         s_baiacu -= 0.05
@@ -173,6 +173,20 @@ def desenha_helice(angulo, t_x, t_y, t_z, loc_color):
     glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice) # renderizando
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) 
 
+
+def desenha_cano(t_x, t_y, t_z, loc_color):
+    
+    global vertices #preciso acessar 
+
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.5, 0.5, 0.5)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+
+    glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+
+    glDrawArrays(GL_TRIANGLES, verticeInicial_cano, qtdVertices_cano) # renderizando
+
+
 def desenha_alga(t_x, t_y, t_z, s_x, s_y, loc_color):
     
     global vertices #preciso acessar 
@@ -209,14 +223,40 @@ def desenha_pedra(t_x, t_y, t_z, loc_color):
     
     glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra) # renderizando
 
+def desenha_boca_baiacu(t_x, t_y, t_z, loc_color):
+    
+    global vertices #preciso acessar 
+
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.07, 0.07, 0.07)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+
+    glUniform4f(loc_color, 1.0, 0, 0.7, 1.0)
+    
+    glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra) # renderizando
+
+def desenha_olho_baiacu(t_x, t_y, t_z, loc_color):
+    
+    global vertices #preciso acessar 
+
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.04, 0.04, 0.04)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+
+    glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+    
+    glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra) # renderizando
+
 
 def __main__():
 
     global angulo_helice, v_angulo
+    global verticeInicial_cano, qtdVertices_cano 
     global verticeInicial_alga, qtdVertices_alga
     global verticeInicial_pedra, qtdVertices_pedra
     global verticeInicial_baiacu, qtdVertices_baiacu, s_baiacu
     global vertices_list, program, verticeInicial_helice, qtdVertices_helice
+    global verticeInicial_fundo_helice, qtdVertices_fundo_helice
 
     window, program = config.init()
 
@@ -224,7 +264,7 @@ def __main__():
     verticeInicial_alga, qtdVertices_alga = load_obj('alga.txt')
     verticeInicial_baiacu, qtdVertices_baiacu = load_obj('baiacu.txt')
     verticeInicial_pedra, qtdVertices_pedra = load_obj('pedra.txt')
-
+    verticeInicial_cano, qtdVertices_cano = load_obj('cano.txt')
 
     buffer_VBO, vertices = buffer_object()
 
@@ -253,7 +293,7 @@ def __main__():
 
         #erasing for redraw 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)    
-        glClearColor(0.0, 0.7, 1.0, 1.0)
+        glClearColor(0.0, 0.3, 0.8, 0.3)
 
         """
         velocidade da helice aumenta 0.001 a cada vez, 
@@ -263,7 +303,8 @@ def __main__():
 
         #desenha helice, passar angulo e ponto do centro 
         desenha_helice(angulo_helice, -0.7, 0.5, 0.0, loc_color)
-        
+        #desenha_cano(-0.7, 0.5, 0.0, loc_color)
+
         #desenhar várias algas no fundo do aquário
         pos_alga = -1.9
 
@@ -272,6 +313,9 @@ def __main__():
             pos_alga += 0.06
         
         desenha_baiacu(0.0, -0.5, 0.0, s_baiacu, s_baiacu, s_baiacu, loc_color)
+        desenha_boca_baiacu(0.0, -0.6, -1, loc_color)
+        desenha_olho_baiacu(0.07, -0.5, -1, loc_color)
+        desenha_olho_baiacu(-0.07, -0.5, -1, loc_color)
 
         desenha_pedra(-0.6, -0.9, 0.0, loc_color)
         desenha_pedra(0.6, -0.9, 0.0, loc_color)
