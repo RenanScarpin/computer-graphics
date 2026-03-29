@@ -12,7 +12,7 @@ import ctypes
 
 v_angulo = 0.1 
 angulo_helice = 0.0
-
+done = 0 
 vertices_list = []
 
 """
@@ -87,7 +87,7 @@ def load_obj(objFile):
 
 def key_event(window,key,scancode,action,mods):
     
-    global v_angulo, angulo_helice, s_baiacu
+    global v_angulo, angulo_helice, s_baiacu, done
     
     if key == glfw.KEY_D and action == glfw.PRESS:
         if v_angulo == 0: #tava parado e volta a rodar
@@ -105,7 +105,14 @@ def key_event(window,key,scancode,action,mods):
     elif key == glfw.KEY_S: #baiacu aumenta ate a escala inicial 
         s_baiacu -= 0.05
         s_baiacu = max(s_baiacu, 0.7)
-        
+    
+    elif key == glfw.KEY_P and action == glfw.PRESS:
+        print("mudei")
+        if done == 1: 
+            done = 0 
+        else: 
+            done = 1 
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
 def multiplica_matriz(a,b):
     m_a = a.reshape(4,4)
@@ -130,7 +137,7 @@ def buffer_object():
 
     return buffer_VBO, vertices
 
-def operar_vertices(angle, t_x, t_y, t_z, s_x, s_y, s_z):
+def operar_vertices(angle, t_x, t_y, t_z, s_x, s_y, s_z, rot_y = 0.0):
 
     angle = math.radians(angle)
 
@@ -148,12 +155,19 @@ def operar_vertices(angle, t_x, t_y, t_z, s_x, s_y, s_z):
                                     0.0,      0.0, 1.0, 0.0, 
                                     0.0,      0.0, 0.0, 1.0], np.float32)
     
+    mat_rotation_y = np.array([     math.cos(rot_y), 0.0, math.sin(rot_y), 0.0, 
+                                    0.0,  1.0, 0.0, 0.0, 
+                                    -math.sin(rot_y),      0.0, math.cos(rot_y), 0.0, 
+                                    0.0,      0.0, 0.0, 1.0], np.float32)
+    
+
     #matriz escala 
     mat_scale = np.array([          s_x,  0.0, 0.0, 0.0, 
                                     0.0,  s_y, 0.0, 0.0, 
                                     0.0,  0.0, s_z, 0.0, 
                                     0.0,  0.0, 0.0, 1.0], np.float32)
-
+    
+    mat_rotation_z = multiplica_matriz(mat_rotation_z, mat_rotation_y)
     matrix_transform = multiplica_matriz(mat_rotation_z, mat_scale)
     matrix_transform = multiplica_matriz(mat_translate, matrix_transform)
 
@@ -169,9 +183,11 @@ def desenha_helice(angulo, t_x, t_y, t_z, loc_color):
 
     glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
     
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) #pra não ficar preenchido
+    if done == 0:
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) #pra não ficar preenchido
     glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice) # renderizando
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) 
+    if done == 0:
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) 
 
 
 def desenha_cano(t_x, t_y, t_z, loc_color):
@@ -223,6 +239,21 @@ def desenha_pedra(t_x, t_y, t_z, loc_color):
     
     glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra) # renderizando
 
+def desenha_peixe(t_x, t_y, t_z, loc_color):
+    
+    global vertices #preciso acessar 
+
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.3, 0.3, 0.3, rot_y=120.0)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+
+
+    #mostrar a triangularizacao 
+    #glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+    glUniform4f(loc_color, 1.0, 0.45, 0.1, 1.0)
+    
+    glDrawArrays(GL_TRIANGLES, verticeInicial_peixe, qtdVertices_peixe) # renderizando
+
 def desenha_boca_baiacu(t_x, t_y, t_z, loc_color):
     
     global vertices #preciso acessar 
@@ -251,6 +282,7 @@ def desenha_olho_baiacu(t_x, t_y, t_z, loc_color):
 def __main__():
 
     global angulo_helice, v_angulo
+    global verticeInicial_peixe, qtdVertices_peixe
     global verticeInicial_cano, qtdVertices_cano 
     global verticeInicial_alga, qtdVertices_alga
     global verticeInicial_pedra, qtdVertices_pedra
@@ -260,6 +292,7 @@ def __main__():
 
     window, program = config.init()
 
+    verticeInicial_peixe, qtdVertices_peixe = load_obj('peixe.txt')
     verticeInicial_helice, qtdVertices_helice = load_obj('helice.txt')
     verticeInicial_alga, qtdVertices_alga = load_obj('alga.txt')
     verticeInicial_baiacu, qtdVertices_baiacu = load_obj('baiacu.txt')
@@ -308,7 +341,7 @@ def __main__():
         #desenhar várias algas no fundo do aquário
         pos_alga = -1.9
 
-        for i in range(0, 80):
+        for i in range(0, 300):
             desenha_alga(pos_alga, -1.0, 0.0, 0.5, 0.5, loc_color)
             pos_alga += 0.06
         
@@ -319,6 +352,8 @@ def __main__():
 
         desenha_pedra(-0.6, -0.9, 0.0, loc_color)
         desenha_pedra(0.6, -0.9, 0.0, loc_color)
+
+        desenha_peixe(-0.5, -0.3, 0.0, loc_color)
 
         glfw.swap_buffers(window)
     
