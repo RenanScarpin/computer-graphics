@@ -422,6 +422,27 @@ def desenha_olho_peixe(t_x, t_y, t_z, loc_color):
         glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
         glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
 
+def desenha_areia(loc_color):
+    
+    global vertices, mesh_mode
+    
+    mat_transf = operar_vertices(0.0, 0.0, -1.0, 0.0, 1.0, 1.0, 1.0)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+    
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 0.8, 0.7, 0.5, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_areia, qtdVertices_areia)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_areia, qtdVertices_areia)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 0.8, 0.7, 0.5, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_areia, qtdVertices_areia)
 
 def __main__():
 
@@ -431,6 +452,7 @@ def __main__():
     global verticeInicial_alga, qtdVertices_alga
     global verticeInicial_pedra, qtdVertices_pedra
     global verticeInicial_baiacu, qtdVertices_baiacu, s_baiacu
+    global verticeInicial_areia, qtdVertices_areia
     global vertices_list, program, verticeInicial_helice, qtdVertices_helice
     global verticeInicial_fundo_helice, qtdVertices_fundo_helice
     global fish_x, fish_y, fish_vx, fish_facing
@@ -443,6 +465,7 @@ def __main__():
     verticeInicial_baiacu, qtdVertices_baiacu = load_obj('baiacu.txt')
     verticeInicial_pedra, qtdVertices_pedra = load_obj('pedra.txt')
     verticeInicial_cano, qtdVertices_cano = load_obj('cano.txt')
+    verticeInicial_areia, qtdVertices_areia = load_obj('areia.txt')
 
     buffer_VBO, vertices = buffer_object()
 
@@ -488,6 +511,9 @@ def __main__():
         #desenha helice, passar angulo e ponto do centro 
         desenha_helice(angulo_helice, -0.7, 0.5, 0.0, loc_color)
         #desenha_cano(-0.7, 0.5, 0.0, loc_color)
+
+        #desenha areia no fundo
+        desenha_areia(loc_color)
 
         #desenhar várias algas no fundo do aquário
         pos_alga = -1.9
