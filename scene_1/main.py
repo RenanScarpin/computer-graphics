@@ -12,8 +12,21 @@ import ctypes
 
 v_angulo = 0.1 
 angulo_helice = 0.0
-done = 0 
+mesh_mode = False
 vertices_list = []
+
+# Fish movement state
+fish_x = -0.5
+fish_y = -0.3
+fish_vx = 0.0
+fish_facing = 1.0  # 1.0 to right, -1.0 to left
+fish_speed = 0.015
+
+# Eye placement (one side defines the other by mirror)
+fish_eye_offset_x = 0.08  # horizontal distance from fish center
+fish_eye_offset_y = 0.02  # vertical offset above fish center
+fish_eye_scale_x = 0.03
+fish_eye_scale_y = 0.05
 
 """
 Abre o arquivo com a lista de vértices 
@@ -87,7 +100,8 @@ def load_obj(objFile):
 
 def key_event(window,key,scancode,action,mods):
     
-    global v_angulo, angulo_helice, s_baiacu, done
+    global v_angulo, angulo_helice, s_baiacu, mesh_mode
+    global fish_vx, fish_facing, fish_speed
     
     if key == glfw.KEY_D and action == glfw.PRESS:
         if v_angulo == 0: #tava parado e volta a rodar
@@ -100,19 +114,37 @@ def key_event(window,key,scancode,action,mods):
             v_angulo = 0.0
     elif key == glfw.KEY_A: #baiacu aumenta ate um limite
         s_baiacu += 0.05
-        s_baiacu = min(s_baiacu, 1.1)
+        s_baiacu = min(s_baiacu, 1.0)
+
+    elif key == glfw.KEY_S: #baiacu aumenta ate a escala inicial 
+        s_baiacu -= 0.05
+        s_baiacu = max(s_baiacu, 0.5)
+    
+    elif key == glfw.KEY_P and action == glfw.PRESS:
+        mesh_mode = not mesh_mode
+        print("Mesh mode:", mesh_mode)
+
+    elif key == glfw.KEY_Z:
+        if action == glfw.PRESS or action == glfw.REPEAT:
+            fish_vx = -fish_speed
+            fish_facing = 1.0
+        elif action == glfw.RELEASE and fish_vx < 0:
+            fish_vx = 0.0
+
+    elif key == glfw.KEY_X:
+        if action == glfw.PRESS or action == glfw.REPEAT:
+            fish_vx = fish_speed
+            fish_facing = -1.0
+        elif action == glfw.RELEASE and fish_vx > 0:
+            fish_vx = 0.0
         
     elif key == glfw.KEY_S: #baiacu aumenta ate a escala inicial 
         s_baiacu -= 0.05
-        s_baiacu = max(s_baiacu, 0.7)
+        s_baiacu = max(s_baiacu, 0.5)
     
     elif key == glfw.KEY_P and action == glfw.PRESS:
-        print("mudei")
-        if done == 1: 
-            done = 0 
-        else: 
-            done = 1 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        mesh_mode = not mesh_mode
+        print("Mesh mode:", mesh_mode)
 
 def multiplica_matriz(a,b):
     m_a = a.reshape(4,4)
@@ -175,108 +207,220 @@ def operar_vertices(angle, t_x, t_y, t_z, s_x, s_y, s_z, rot_y = 0.0):
 
 def desenha_helice(angulo, t_x, t_y, t_z, loc_color):
     
-    global vertices #preciso acessar 
+    global vertices, mesh_mode #preciso acessar 
 
     mat_transf = operar_vertices(angulo, t_x, t_y, t_z, 1.0, 1.0, 1.0)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
-    
-    if done == 0:
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE) #pra não ficar preenchido
-    glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice) # renderizando
-    if done == 0:
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) 
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice) 
 
 
 def desenha_cano(t_x, t_y, t_z, loc_color):
     
-    global vertices #preciso acessar 
+    global vertices, mesh_mode #preciso acessar 
 
     mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.5, 0.5, 0.5)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
-
-    glDrawArrays(GL_TRIANGLES, verticeInicial_cano, qtdVertices_cano) # renderizando
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_cano, qtdVertices_cano)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_cano, qtdVertices_cano)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_cano, qtdVertices_cano)
 
 
 def desenha_alga(t_x, t_y, t_z, s_x, s_y, loc_color):
     
-    global vertices #preciso acessar 
+    global vertices, mesh_mode #preciso acessar 
 
     mat_transf = operar_vertices(0.0, t_x, t_y, t_z, s_x,  s_y, 1.0)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    glUniform4f(loc_color, 0.0, 1.0, 0.0, 1.0)
-    
-    glDrawArrays(GL_TRIANGLES, verticeInicial_alga, qtdVertices_alga) # renderizando
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 0.0, 1.0, 0.0, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_alga, qtdVertices_alga)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_alga, qtdVertices_alga)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 0.0, 1.0, 0.0, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_alga, qtdVertices_alga)
 
 def desenha_baiacu(t_x, t_y, t_z, s_x, s_y, s_z, loc_color):
     
-    global vertices #preciso acessar 
+    global vertices, mesh_mode #preciso acessar 
 
     mat_transf = operar_vertices(90.0, t_x, t_y, t_z, s_x, s_y, s_z)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    glUniform4f(loc_color, 0.95, 0.80, 0.35, 1.0)
-    
-    glDrawArrays(GL_TRIANGLES, verticeInicial_baiacu, qtdVertices_baiacu) # renderizando
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 0.95, 0.80, 0.35, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_baiacu, qtdVertices_baiacu)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_baiacu, qtdVertices_baiacu)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 0.95, 0.80, 0.35, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_baiacu, qtdVertices_baiacu)
+
+    # Draw eyes and mouth at scaled positions on the surface
+    scale = s_x  # assuming uniform scaling
+    eye_right_x = t_x + 0.07 * scale
+    eye_right_y = t_y + 0.0
+    eye_right_z = t_z - 1.0 * scale
+    eye_left_x = t_x - 0.07 * scale
+    eye_left_y = t_y + 0.0
+    eye_left_z = t_z - 1.0 * scale
+    mouth_x = t_x + 0.0
+    mouth_y = t_y - 0.1 * scale
+    mouth_z = t_z - 1.0 * scale
+
+    desenha_olho_baiacu(eye_right_x, eye_right_y, eye_right_z, loc_color)
+    desenha_olho_baiacu(eye_left_x, eye_left_y, eye_left_z, loc_color)
+    desenha_boca_baiacu(mouth_x, mouth_y, mouth_z, loc_color)
 
 def desenha_pedra(t_x, t_y, t_z, loc_color):
     
-    global vertices #preciso acessar 
+    global vertices, mesh_mode #preciso acessar 
 
     mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.3, 0.3, 0.3)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    glUniform4f(loc_color, 0.5, 0.5, 0.5, 1.0)
-    
-    glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra) # renderizando
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 0.5, 0.5, 0.5, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 0.5, 0.5, 0.5, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
 
-def desenha_peixe(t_x, t_y, t_z, loc_color):
+def desenha_peixe(t_x, t_y, t_z, loc_color, facing=1.0):
     
-    global vertices #preciso acessar 
+    global vertices, mesh_mode #preciso acessar 
 
-    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.3, 0.3, 0.3, rot_y=120.0)
+    # Flip horizontally by negative x-scale when facing left
+    s_x = 0.3 * facing
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, s_x, 0.3, 0.3, rot_y=120.0)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-
-    #mostrar a triangularizacao 
-    #glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-    glUniform4f(loc_color, 1.0, 0.45, 0.1, 1.0)
-    
-    glDrawArrays(GL_TRIANGLES, verticeInicial_peixe, qtdVertices_peixe) # renderizando
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 1.0, 0.45, 0.1, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_peixe, qtdVertices_peixe)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_peixe, qtdVertices_peixe)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 1.0, 0.45, 0.1, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_peixe, qtdVertices_peixe)
 
 def desenha_boca_baiacu(t_x, t_y, t_z, loc_color):
     
-    global vertices #preciso acessar 
+    global vertices, mesh_mode #preciso acessar 
 
     mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.07, 0.07, 0.07)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    glUniform4f(loc_color, 1.0, 0, 0.7, 1.0)
-    
-    glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra) # renderizando
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 1.0, 0.0, 0.7, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 1.0, 0.0, 0.7, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
 
 def desenha_olho_baiacu(t_x, t_y, t_z, loc_color):
     
-    global vertices #preciso acessar 
+    global vertices, mesh_mode #preciso acessar 
 
     mat_transf = operar_vertices(0.0, t_x, t_y, t_z, 0.04, 0.04, 0.04)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
-    
-    glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra) # renderizando
+    if mesh_mode:
+        # draw fill with transparency
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+        # draw lines
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+
+
+def desenha_olho_peixe(t_x, t_y, t_z, loc_color):
+    global vertices, mesh_mode
+
+    # vertical ellipse style from rock model
+    mat_transf = operar_vertices(0.0, t_x, t_y, t_z, fish_eye_scale_x, fish_eye_scale_y, 0.03)
+    loc_model = glGetUniformLocation(program, "mat_transformation")
+    glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
+
+    if mesh_mode:
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 0.3)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+    else:
+        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+        glDrawArrays(GL_TRIANGLES, verticeInicial_pedra, qtdVertices_pedra)
 
 
 def __main__():
@@ -289,6 +433,7 @@ def __main__():
     global verticeInicial_baiacu, qtdVertices_baiacu, s_baiacu
     global vertices_list, program, verticeInicial_helice, qtdVertices_helice
     global verticeInicial_fundo_helice, qtdVertices_fundo_helice
+    global fish_x, fish_y, fish_vx, fish_facing
 
     window, program = config.init()
 
@@ -324,6 +469,12 @@ def __main__():
         
         glfw.poll_events()
 
+        if mesh_mode:
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        else:
+            glDisable(GL_BLEND)
+
         #erasing for redraw 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)    
         glClearColor(0.0, 0.3, 0.8, 0.3)
@@ -346,14 +497,19 @@ def __main__():
             pos_alga += 0.06
         
         desenha_baiacu(0.0, -0.5, 0.0, s_baiacu, s_baiacu, s_baiacu, loc_color)
-        desenha_boca_baiacu(0.0, -0.6, -1, loc_color)
-        desenha_olho_baiacu(0.07, -0.5, -1, loc_color)
-        desenha_olho_baiacu(-0.07, -0.5, -1, loc_color)
 
         desenha_pedra(-0.6, -0.9, 0.0, loc_color)
         desenha_pedra(0.6, -0.9, 0.0, loc_color)
 
-        desenha_peixe(-0.5, -0.3, 0.0, loc_color)
+        # update fish position and keep it inside view
+        fish_x += fish_vx
+        fish_x = max(min(fish_x, 1.8), -1.8)
+        desenha_peixe(fish_x, fish_y, 0.0, loc_color, facing=fish_facing)
+
+        # single fish eye that mirrors position with facing direction
+        eye_x = fish_x + fish_facing * -fish_eye_offset_x
+        eye_y = fish_y + fish_eye_offset_y
+        desenha_olho_peixe(eye_x, eye_y, -0.1, loc_color)
 
         glfw.swap_buffers(window)
     
