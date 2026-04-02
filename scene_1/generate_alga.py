@@ -58,23 +58,23 @@ def gerar_alga(altura=0.9, segmentos=30, largura=0.08, amplitude=0.2, frequencia
         v2 = base + 2
         v3 = base + 3
 
-        faces.append([v0, v2, v1])  # invertido para normal para fora
-        faces.append([v1, v2, v3])
+    #    faces.append([v0, v2, v1])  # invertido para normal para fora
+    #    faces.append([v1, v2, v3])
 
     # Faces laterais (conectando frente e trás)
-    for i in range(segmentos):
-        front_left = 2 * i
-        front_right = 2 * i + 1
-        back_left = 2 * i + offset_back
-        back_right = 2 * i + 1 + offset_back
+    #for i in range(segmentos):
+    #    front_left = 2 * i
+    #    front_right = 2 * i + 1
+    #    back_left = 2 * i + offset_back
+    #    back_right = 2 * i + 1 + offset_back
 
         # Lado esquerdo
-        faces.append([front_left, back_left, front_left + 2])
-        faces.append([back_left, back_left + 2, front_left + 2])
+    #    faces.append([front_left, back_left, front_left + 2])
+    #    faces.append([back_left, back_left + 2, front_left + 2])
 
         # Lado direito
-        faces.append([front_right, front_right + 2, back_right])
-        faces.append([back_right, front_right + 2, back_right + 2])
+    #    faces.append([front_right, front_right + 2, back_right])
+    #    faces.append([back_right, front_right + 2, back_right + 2])
 
     return vertices, faces
 

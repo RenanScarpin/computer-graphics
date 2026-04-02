@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-num_vertices = 100
+num_vertices = 12
 pi = math.pi
 radius = 0.2
 

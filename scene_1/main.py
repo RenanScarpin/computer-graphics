@@ -10,7 +10,7 @@ import ctypes
 
 #agrupa todos vertices de todas figuras
 
-v_angulo = 0.1 
+v_angulo = 0.2 
 angulo_helice = 0.0
 mesh_mode = False
 vertices_list = []
@@ -105,12 +105,10 @@ def key_event(window,key,scancode,action,mods):
     
     if key == glfw.KEY_D and action == glfw.PRESS:
         if v_angulo == 0: #tava parado e volta a rodar
-            v_angulo = 0.1
-            angulo_helice = 0.0 
+            v_angulo = 0.2
             print("voltei")
         else: 
             print("parei")
-            angulo_helice = 0.0 
             v_angulo = 0.0
     elif key == glfw.KEY_A: #baiacu aumenta ate um limite
         s_baiacu += 0.05
@@ -213,19 +211,11 @@ def desenha_helice(angulo, t_x, t_y, t_z, loc_color):
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
 
-    if mesh_mode:
-        # draw fill with transparency
-        glUniform4f(loc_color, 0.0, 0.0, 0.0, 0.3)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-        glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice)
-        # draw lines
-        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-        glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-    else:
-        glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
-        glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice) 
+    # draw lines
+    glUniform4f(loc_color, 0.0, 0.0, 0.0, 1.0)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+    glDrawArrays(GL_TRIANGLES, verticeInicial_helice, qtdVertices_helice)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
 
 def desenha_cano(t_x, t_y, t_z, loc_color):
@@ -299,13 +289,13 @@ def desenha_baiacu(t_x, t_y, t_z, s_x, s_y, s_z, loc_color):
     scale = s_x  # assuming uniform scaling
     eye_right_x = t_x + 0.07 * scale
     eye_right_y = t_y + 0.0
-    eye_right_z = t_z - 1.0 * scale
+    eye_right_z = t_z - 0.8 * scale
     eye_left_x = t_x - 0.07 * scale
     eye_left_y = t_y + 0.0
-    eye_left_z = t_z - 1.0 * scale
+    eye_left_z = t_z - 0.8 * scale
     mouth_x = t_x + 0.0
     mouth_y = t_y - 0.1 * scale
-    mouth_z = t_z - 1.0 * scale
+    mouth_z = t_z - 0.8 * scale
 
     desenha_olho_baiacu(eye_right_x, eye_right_y, eye_right_z, loc_color)
     desenha_olho_baiacu(eye_left_x, eye_left_y, eye_left_z, loc_color)
@@ -426,7 +416,7 @@ def desenha_areia(loc_color):
     
     global vertices, mesh_mode
     
-    mat_transf = operar_vertices(0.0, 0.0, -1.0, 0.0, 1.0, 1.0, 1.0)
+    mat_transf = operar_vertices(0.0, 0.0, 0.0, -1.0, 1.0, 1.0, 1.0)
     loc_model = glGetUniformLocation(program, "mat_transformation")
     glUniformMatrix4fv(loc_model, 1, GL_TRUE, mat_transf)
     
@@ -485,7 +475,7 @@ def __main__():
     glEnable(GL_DEPTH_TEST) #3D
 
     angulo_helice = 0.0 
-    v_angulo = 0.1
+    v_angulo = 0.2
     s_baiacu = 0.7
 
     while not glfw.window_should_close(window):
@@ -522,7 +512,7 @@ def __main__():
             desenha_alga(pos_alga, -1.0, 0.0, 0.5, 0.5, loc_color)
             pos_alga += 0.06
         
-        desenha_baiacu(0.0, -0.5, 0.0, s_baiacu, s_baiacu, s_baiacu, loc_color)
+        desenha_baiacu(0.0, -0.2, 0.9, s_baiacu, s_baiacu, s_baiacu, loc_color)
 
         desenha_pedra(-0.6, -0.9, 0.0, loc_color)
         desenha_pedra(0.6, -0.9, 0.0, loc_color)
