@@ -17,19 +17,19 @@ mesh_mode = False
 vertices_list = []
 
 # Fish movement state
-fish_y = -0.20
+fish_y = -0.40
 fish_progress = -0.18
 fish_velocity = 0.0
 fish_facing = 1.0  # 1.0 = swimming to the right, -1.0 = swimming to the left
 fish_speed = 0.012
 
-FISH_YAW_RIGHT = 120.0
-FISH_YAW_LEFT = 300.0
-FISH_PATH_CENTER_X = -0.02
+FISH_YAW_RIGHT = 140.0
+FISH_YAW_LEFT = 320.0
+FISH_PATH_CENTER_X = 0.1
 FISH_PATH_CENTER_Z = 0.02
-FISH_PATH_HALF_LENGTH = 0.62
-FISH_PATH_DIR_X = 0.5
-FISH_PATH_DIR_Z = 0.8660254
+FISH_PATH_HALF_LENGTH = 0.8
+FISH_PATH_DIR_X = 1.0
+FISH_PATH_DIR_Z = 0.45
 
 # Fish eye scale
 fish_eye_scale_x = 0.03
@@ -236,7 +236,7 @@ def draw_model(inicio, quantidade, color, alpha=1.0, wire_overlay=False):
 def draw_fan(angle, t_x, t_y, t_z):
     mat_transf = operar_vertices(
         angle, t_x, t_y, t_z,
-        0.42, 0.42, 0.42,
+        0.75, 0.75, 0.75,
         rot_y=SCENE_ROT_X, rot_x=SCENE_ROT_Y,
         apply_scene=False
     )
@@ -486,11 +486,19 @@ def __main__():
         draw_sand()
 
         # Generate algae in different positions
-        for i in range(18):
-            x = -0.82 + i * 0.095
+        for i in range(35):
+            x = -0.82 + i * 0.050
             z = -0.24 if i % 2 == 0 else -0.12
             scale_x = 0.34 if i % 3 else 0.28
             scale_y = 0.52 if i % 2 == 0 else 0.46
+            draw_algae(x, -0.86, z, scale_x, scale_y)
+        
+        # Additional algae cluster
+        for i in range(15):
+            x = -0.75 + i * 0.075
+            z = 0.15 if i % 2 == 0 else 0.28
+            scale_x = 0.30 if i % 4 else 0.26
+            scale_y = 0.48 if i % 3 == 0 else 0.42
             draw_algae(x, -0.86, z, scale_x, scale_y)
 
         draw_pufferfish(-0.24, -0.18, 0.26, s_pufferfish, s_pufferfish, s_pufferfish)
