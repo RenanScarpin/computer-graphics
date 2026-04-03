@@ -1,18 +1,13 @@
 import math
+import utils
 
-def normalizar(v):
-    x, y, z = v
-    norma = math.sqrt(x*x + y*y + z*z)
-    if norma == 0:
-        return [0.0, 0.0, 0.0]
-    return [x/norma, y/norma, z/norma]
-
-def gerar_esfera(raio=0.2, lat=20, lon=30):
+# Generates a sphere
+def gen_sphere(raio=0.2, lat=20, lon=30):
     
     vertices = []
     faces = []
 
-    # vértices
+    # Vértices
     for i in range(lat + 1):
         phi = math.pi*i/lat #[0,pi]
 
@@ -25,7 +20,7 @@ def gerar_esfera(raio=0.2, lat=20, lon=30):
 
             vertices.append([x, y, z])
 
-    # faces
+    # Faces
     for i in range(lat):
         for j in range(lon):
             v0 = i*(lon+1)+j
@@ -38,7 +33,8 @@ def gerar_esfera(raio=0.2, lat=20, lon=30):
 
     return vertices, faces
 
-def add_espinhos(vertices, faces, alt_espinho = 0.05, passo = 10):
+# Adds spikes to a sphere
+def add_spikes(vertices, faces, alt_espinho = 0.05, passo = 10):
 
     novas_faces = []
 
@@ -48,7 +44,7 @@ def add_espinhos(vertices, faces, alt_espinho = 0.05, passo = 10):
         vb = vertices[b]
         vc = vertices[c]
 
-        #algumas faces com espinho
+        # Some faces with spikes
         if id % passo == 0:
 
             centro = [
@@ -57,7 +53,7 @@ def add_espinhos(vertices, faces, alt_espinho = 0.05, passo = 10):
                 (va[2] + vb[2] + vc[2]) / 3.0,
             ]
 
-            dir = normalizar(centro)
+            dir = utils.normalize(centro)
 
             ponta = [
                 centro[0] + dir[0]*alt_espinho,
@@ -77,11 +73,12 @@ def add_espinhos(vertices, faces, alt_espinho = 0.05, passo = 10):
     return vertices, novas_faces
 
 
-vertices_final, faces = gerar_esfera()
-vertices_final, faces = add_espinhos(vertices_final, faces)
+final_vertices, faces = gen_sphere()
+final_vertices, faces = add_spikes(final_vertices, faces)
 
-with open("baiacu.txt", "w", encoding="utf-8") as f:
-    for x, y, z in vertices_final:
+# Writes to file
+with open("pufferfish.txt", "w", encoding="utf-8") as f:
+    for x, y, z in final_vertices:
         f.write(f"v {x} {y} {z}\n")
 
     for a, b, c in faces:

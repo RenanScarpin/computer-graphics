@@ -5,7 +5,7 @@ def gerar_elipsoide(a = 4, b = 2, c = 2, raio=0.15, lat=20, lon=30):
     vertices = []
     faces = []
 
-    # vértices
+    # Vertices
     for i in range(lat + 1):
         phi = math.pi*i/lat #[0,pi]
 
@@ -18,7 +18,7 @@ def gerar_elipsoide(a = 4, b = 2, c = 2, raio=0.15, lat=20, lon=30):
 
             vertices.append([x, y, z])
 
-    # faces
+    # Faces
     for i in range(lat):
         for j in range(lon):
             v0 = i*(lon+1)+j
@@ -33,7 +33,8 @@ def gerar_elipsoide(a = 4, b = 2, c = 2, raio=0.15, lat=20, lon=30):
 
 vertices_final, faces = gerar_elipsoide()
 
-with open("pedra.txt", "w", encoding="utf-8") as f:
+# Writes to file
+with open("rock.txt", "w", encoding="utf-8") as f:
     for x, y, z in vertices_final:
         f.write(f"v {x} {y} {z}\n")
 
