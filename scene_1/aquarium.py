@@ -500,6 +500,22 @@ def __main__():
             scale_x = 0.30 if i % 4 else 0.26
             scale_y = 0.48 if i % 3 == 0 else 0.42
             draw_algae(x, -0.86, z, scale_x, scale_y)
+        
+        # Additional algae cluster
+        for i in range(15):
+            x = -0.75 + i * 0.075
+            z = 0.32 if i % 2 == 0 else 0.36
+            scale_x = 0.30 if i % 4 else 0.26
+            scale_y = 0.48 if i % 3 == 0 else 0.42
+            draw_algae(x, -0.86, z, scale_x, scale_y)
+        
+         # Additional algae cluster
+        for i in range(15):
+            x = -0.75 + i * 0.075
+            z = -0.32 if i % 2 == 0 else -0.36
+            scale_x = 0.30 if i % 4 else 0.26
+            scale_y = 0.48 if i % 3 == 0 else 0.42
+            draw_algae(x, -0.86, z, scale_x, scale_y)
 
         draw_pufferfish(-0.24, -0.18, 0.26, s_pufferfish, s_pufferfish, s_pufferfish)
 
