@@ -1,7 +1,6 @@
 import glfw
 from OpenGL.GL import *
 import numpy as np
-import glm
 import math
 from numpy import random
 from PIL import Image
@@ -13,19 +12,18 @@ vertices_list = []
 global textures_coord_list
 textures_coord_list = []
 
-
 # =====================
 # Useful math functions
 # =====================
 
 # Transformation matrix generator
-def translation_matrix(t_x, t_y, t_z):
+def translation_matrix(tx, ty, tz):
     return np.array([
-        1.0, 0.0, 0.0, t_x,
-        0.0, 1.0, 0.0, t_y,
-        0.0, 0.0, 1.0, t_z,
-        0.0, 0.0, 0.0, 1.0
-    ], np.float32)
+        [1.0, 0.0, 0.0, tx],
+        [0.0, 1.0, 0.0, ty],
+        [0.0, 0.0, 1.0, tz],
+        [0.0, 0.0, 0.0, 1.0]
+    ])
 
 # Rotation matrix generator for X axis
 def rotation_x_matrix(angle_deg):
@@ -60,10 +58,10 @@ def rotation_z_matrix(angle_deg):
 # Scale matrix generator
 def scale_matrix(s_x, s_y, s_z):
     return np.array([
-        s_x, 0.0, 0.0, 0.0,
-        0.0, s_y, 0.0, 0.0,
-        0.0, 0.0, s_z, 0.0,
-        0.0, 0.0, 0.0, 1.0
+        [s_x, 0.0, 0.0, 0.0],
+        [0.0, s_y, 0.0, 0.0],
+        [0.0, 0.0, s_z, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
     ], np.float32)
 
 # Helper function to multiply two 4x4 matrices represented as flat arrays
@@ -81,18 +79,22 @@ def normalize(v):
         return [0.0, 0.0, 0.0]
     return [x/norma, y/norma, z/norma]
 
-
 def initOpenGL(largura, altura):
 
-    #inicilializando a janela 
-    glfw.init()
+    print("Inicializando o GLFW...")
+    if not glfw.init():
+        print("Falha na inicialização do GLFW")
+        return None, None
+
+    print("Criando a janela...")
     glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
 
-    window = glfw.create_window(largura, altura, "Programa", None, None)
+    window = glfw.create_window(largura, altura, "OpenGL Window", None, None)
 
-    if (window == None):
+    if (window is None):
         print("Failed to create GLFW window")
-        glfwTerminate()
+        glfw.terminate()
+        return None, None 
         
     glfw.make_context_current(window)
 
@@ -108,6 +110,8 @@ def initOpenGL(largura, altura):
     glEnable( GL_BLEND )
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA )
     glEnable(GL_LINE_SMOOTH)
+
+    glfw.show_window(window)
 
     return window, program
 
