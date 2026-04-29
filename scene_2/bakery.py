@@ -333,6 +333,13 @@ def desenha_flor(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
     desenha_modelo(program, m['flor'][0], m['flor'][1], m['flor'][2][0],
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
+def desenha_concreto(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    desenha_modelo(program, m['concreto'][0], m['concreto'][1], m['concreto'][2][0],
+                   angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
+
+def desenha_ceu(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    desenha_modelo(program, m['ceu'][0], m['ceu'][1], m['ceu'][2][0],
+                   angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
 # =============================================================================
 # Object registry — single source of truth for every scene object
@@ -354,6 +361,8 @@ OBJECTS_REGISTRY = [
     ('mesa_picnic', desenha_mesa_picnic),
     ('poste_luz',   desenha_poste_luz),
     ('flor',        desenha_flor),
+    ('concreto',    desenha_concreto),
+    ('ceu',         desenha_ceu),
 ]
 
 
@@ -553,6 +562,10 @@ def key_event(window, key, scancode, action, mods):
     if key == glfw.KEY_D and (action == glfw.PRESS or action == glfw.REPEAT):
         cameraPos += glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
 
+    # Clamp camera y position to prevent going below 0.37
+    if cameraPos.y < 0.37:
+        cameraPos.y = 0.37
+
     # 'P' toggles wireframe rendering, same as aquarium.py's mesh mode.
     if key == glfw.KEY_P and action == glfw.PRESS:
         polygonal_mode = not polygonal_mode
@@ -679,6 +692,12 @@ def __main__():
     m['flor']        = load_obj_and_texture(
         'objetos/flor/flor.obj',
         ['objetos/flor/Scaniverse_2024_01_19_180715.jpg'])
+    m['concreto']        = load_obj_and_texture(
+        'objetos/concreto/Floor.obj',
+        ['objetos/concreto/floor.png'])
+    m['ceu']        = load_obj_and_texture(
+        'objetos/ceu/ceu.obj',
+        ['objetos/ceu/partly-cloudy_lf.png'])
 
     # Upload everything to the GPU now that all vertex/uv lists are filled.
     buffer_objects(program)
