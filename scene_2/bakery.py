@@ -338,8 +338,10 @@ def desenha_concreto(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, 
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
 def desenha_ceu(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    #glDisable(GL_DEPTH_TEST)
     desenha_modelo(program, m['ceu'][0], m['ceu'][1], m['ceu'][2][0],
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
+    #glEnable(GL_DEPTH_TEST)
 
 # =============================================================================
 # Object registry — single source of truth for every scene object
@@ -563,8 +565,8 @@ def key_event(window, key, scancode, action, mods):
         cameraPos += glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
 
     # Clamp camera y position to prevent going below 0.37
-    if cameraPos.y < 0.37:
-        cameraPos.y = 0.37
+    if cameraPos.y < 0.37 + 0.8:
+        cameraPos.y = 0.37 + 0.8
 
     # 'P' toggles wireframe rendering, same as aquarium.py's mesh mode.
     if key == glfw.KEY_P and action == glfw.PRESS:
@@ -697,7 +699,7 @@ def __main__():
         ['objetos/concreto/floor.png'])
     m['ceu']        = load_obj_and_texture(
         'objetos/ceu/ceu.obj',
-        ['objetos/ceu/partly-cloudy_lf.png'])
+        ['objetos/ceu/material_emissive.png'])
 
     # Upload everything to the GPU now that all vertex/uv lists are filled.
     buffer_objects(program)
