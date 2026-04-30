@@ -38,6 +38,14 @@ lastFrame = 0.0
 # Wireframe toggle
 polygonal_mode = False
 
+# Variaveis controle movimento objetos 
+ang_bolo = 0 
+ang_flor = 0 
+t_pao_y = 0
+t_formiga = 0 
+roda_formiga = 1
+t_y_pao = 0 
+s_pao = 0 #escala do pao 
 
 # -----------------------------
 # Live placement editor state
@@ -300,13 +308,18 @@ def desenha_mesa(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
 
 def desenha_bolo(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    global ang_bolo
     desenha_modelo(program, m['bolo'][0], m['bolo'][1], m['bolo'][2][0],
-                   angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
+                   angle+ang_bolo, r_x, r_y+ang_bolo, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
 
 def desenha_pao(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    global s_pao, t_pao_y
+    if s_pao + 1 > 1.05:
+        s_pao = 0.05 
+        t_pao_y = 0.05
     desenha_modelo(program, m['pao'][0], m['pao'][1], m['pao'][2][0],
-                   angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
+                   angle, r_x, r_y, r_z, t_x, t_y+t_pao_y, t_z, s_x+s_pao, s_y+s_pao, s_z+s_pao)
 
 
 def desenha_batedeira(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
@@ -330,18 +343,22 @@ def desenha_poste_luz(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y,
 
 
 def desenha_flor(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    global ang_flor
     desenha_modelo(program, m['flor'][0], m['flor'][1], m['flor'][2][0],
-                   angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
+                   angle+ang_flor, r_x, r_y+ang_flor, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
 def desenha_concreto(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
     desenha_modelo(program, m['concreto'][0], m['concreto'][1], m['concreto'][2][0],
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
 def desenha_ceu(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
-    #glDisable(GL_DEPTH_TEST)
     desenha_modelo(program, m['ceu'][0], m['ceu'][1], m['ceu'][2][0],
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
-    #glEnable(GL_DEPTH_TEST)
+
+def desenha_formiga(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    global t_formiga, roda_formiga
+    desenha_modelo(program, m['formiga'][0], m['formiga'][1], m['formiga'][2][0],
+                   angle+90, r_x, r_y+(90*roda_formiga), r_z, t_x+t_formiga, t_y, t_z, s_x, s_y, s_z)
 
 # =============================================================================
 # Object registry — single source of truth for every scene object
@@ -365,6 +382,7 @@ OBJECTS_REGISTRY = [
     ('flor',        desenha_flor),
     ('concreto',    desenha_concreto),
     ('ceu',         desenha_ceu),
+    ('formiga', desenha_formiga)
 ]
 
 
@@ -545,10 +563,23 @@ def _adjust_selected(d_tx=0.0, d_ty=0.0, d_tz=0.0, scale_factor=1.0):
         sx * scale_factor, sy * scale_factor, sz * scale_factor,
     )
 
-
+"""
+L key: Move the bread to the right
+R key: Move the bread to the left
+B key: Rotate the cake
+F key: Rotate the flower
+Right arrow: Move the ant to the right
+Left arrow: Move the ant to the left
+T key: Scale the bread up to a certain limit
+"""
 def key_event(window, key, scancode, action, mods):
+    
     global cameraPos, cameraFront, cameraUp, polygonal_mode
     global selected_idx
+    global ang_bolo 
+    global ang_flor 
+    global t_formiga, roda_formiga
+    global t_pao_y, s_pao
 
     if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
         glfw.set_window_should_close(window, True)
@@ -563,6 +594,26 @@ def key_event(window, key, scancode, action, mods):
         cameraPos -= glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
     if key == glfw.KEY_D and (action == glfw.PRESS or action == glfw.REPEAT):
         cameraPos += glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
+    if key == glfw.KEY_B and (action == glfw.PRESS or action == glfw.REPEAT): #rotacionar o bolo
+        ang_bolo += 4
+    if key == glfw.KEY_F and (action == glfw.PRESS or action == glfw.REPEAT): #rotacionar o flor
+        ang_flor += 4
+    if key == glfw.KEY_R and (action == glfw.PRESS or action == glfw.REPEAT):
+        t_pao_x += 2
+    if key == glfw.KEY_R and (action == glfw.PRESS or action == glfw.REPEAT):
+        t_pao_x -= 2
+    if key == glfw.KEY_RIGHT and (action == glfw.PRESS or action == glfw.REPEAT):
+        t_formiga += 0.1
+        #rotaciona a formiga 
+        if roda_formiga == -1: 
+            roda_formiga = 1 
+    if key == glfw.KEY_LEFT and (action == glfw.PRESS or action == glfw.REPEAT):
+        t_formiga -= 0.1
+        if roda_formiga == 1: 
+            roda_formiga = -1 
+    if key == glfw.KEY_T and (action == glfw.PRESS or action == glfw.REPEAT):
+        t_pao_y += 0.01 
+        s_pao += 0.01 
 
     # Clamp camera y position to prevent going below 0.37
     if cameraPos.y < 0.37 + 0.8:
@@ -700,6 +751,10 @@ def __main__():
     m['ceu']        = load_obj_and_texture(
         'objetos/ceu/ceu.obj',
         ['objetos/ceu/material_emissive.png'])
+    
+    m['formiga']        = load_obj_and_texture(
+        'objetos/formiga/formiga.obj',
+        ['objetos/formiga/Ant_Tris_Diffuse.png'])
 
     # Upload everything to the GPU now that all vertex/uv lists are filled.
     buffer_objects(program)
