@@ -479,7 +479,7 @@ B key: Rotate the cake
 F key: Rotate the flower
 Right arrow: Move the ant to the right
 Left arrow: Move the ant to the left
-T key: Scale the bread up to a certain limit
+T key: Scale the bread up to a certain limit and move up so it doesnt cross the table 
 """
 def key_event(window, key, scancode, action, mods):
     
