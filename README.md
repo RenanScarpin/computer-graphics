@@ -7,3 +7,53 @@ The repo consists of different 3D scenes each in its own folder. Scenes were dev
 For scene one we couldn't use camera, textures or shaders and we self-imposed the limitations of writing our own code for vertex and faces generations, that meant not using third party 3D modelling software. The scene is an aquarium with a spinning filter, swimming fish and inflating pufferfish.
 
 ![Scene 1 screenshot](scene_1/images/Screenshot1.png)
+
+# Scene 2 
+
+This project is a scene developed in Python using OpenGL, the scne represents a small coofee shop environment with multiple texture objects, camera movement and keyboard interactions. 
+
+# Composition 
+
+- Textured '.obj' models
+- Camera movement using keyboard and mouse
+- Perspective, projection and view matrix control
+- Multiple objects in the scene:
+  * Bakery environment
+  * Table
+  * Cake
+  * Bread
+  * Mixer
+  * Lamp
+  * Flower
+  * Ant
+  * Light pole
+  * Floor and sky
+- Object placement using `placements.txt`
+
+# Controls 
+
+## Camera
+
+| Key/Mouse | Action | 
+|----------|---------|
+| `W` | Move forward |
+| `S` | Move backward |
+| `A` | Move left |
+| `D` | Move right |
+
+## Object interaction 
+
+| Key/Mouse | Action | 
+|----------|---------|
+| `B` | Rotate the cake |
+| `F` | Rotate the Flower |
+| `T` | Scale and move the bread |
+| `Left Arrow` |  move the ant left  |
+| `Right Arrow` | Move the ant right |
+| `P` | mesh mode |
+
+# Run 
+If you want to run using virtual environment, can just use `requirements.txt` to install the required libraries.
+
+
+![Scene 2 screenshot](scene_2/images/t2.png)
