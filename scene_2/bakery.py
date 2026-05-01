@@ -254,11 +254,6 @@ def desenha_luminaria(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y,
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
 
-def desenha_mesa_picnic(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
-    desenha_modelo(program, m['mesa_picnic'][0], m['mesa_picnic'][1], m['mesa_picnic'][2][0],
-                   angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
-
-
 def desenha_poste_luz(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
     desenha_modelo(program, m['poste_luz'][0], m['poste_luz'][1], m['poste_luz'][2][0],
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
@@ -282,6 +277,10 @@ def desenha_formiga(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s
     desenha_modelo(program, m['formiga'][0], m['formiga'][1], m['formiga'][2][0],
                    angle+90, r_x, r_y+(90*roda_formiga), r_z, t_x+t_formiga, t_y, t_z, s_x, s_y, s_z)
 
+def desenha_plaquinha(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    desenha_modelo(program, m['plaquinha'][0], m['plaquinha'][1], m['plaquinha'][2][0],
+                   angle+90, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
+
 """
 Object registry 
 objects listed here are rendered 
@@ -294,12 +293,12 @@ OBJECTS_REGISTRY = [
     ('pao',         desenha_pao),
     ('batedeira',   desenha_batedeira),
     ('luminaria',   desenha_luminaria),
-    ('mesa_picnic', desenha_mesa_picnic),
     ('poste_luz',   desenha_poste_luz),
     ('flor',        desenha_flor),
     ('concreto',    desenha_concreto),
     ('ceu',         desenha_ceu),
-    ('formiga', desenha_formiga)
+    ('formiga', desenha_formiga), 
+    ('plaquinha', desenha_plaquinha)
 ]
 
 """
@@ -348,7 +347,7 @@ def compute_default_placements(m):
     defaults['luminaria']   = (0.0, 0, 1, 0,  cent_x, a_maxy - 0.2, cent_z,             50.0, 50.0, 50.0)
     defaults['flor']        = (0.0, 0, 1, 0,  a_minx + 0.3, a_miny, a_minz + 0.3,       50.0, 50.0, 50.0)
     defaults['poste_luz']   = (0.0, 0, 1, 0,  a_maxx - 0.2, a_miny, a_maxz - 0.2,       55.0, 55.0, 55.0)
-    defaults['mesa_picnic'] = (0.0, 0, 1, 0,  a_maxx - 1.0, a_miny, a_minz + 1.0,       5.0, 5.0, 5.0)
+    defaults['plaquinha'] = (0.0, 0, 1, 0,  a_maxx - 1.0, a_miny, a_minz + 1.0,       5.0, 5.0, 5.0)
 
     return defaults
 
@@ -643,9 +642,7 @@ def __main__():
     m['luminaria']   = load_obj_and_texture(
         'objetos/luminaria/luminaria.obj',
         ['objetos/luminaria/Body_RGH_2K.jpg'])
-    m['mesa_picnic'] = load_obj_and_texture(
-        'objetos/mesa_picnic/mesa_picnic.obj',
-        ['objetos/mesa_picnic/Wood_Planks_C01_100cm.jpg'])
+
     m['poste_luz']   = load_obj_and_texture(
         'objetos/poste_luz/poste_luz.obj',
         ['objetos/poste_luz/Base Color.png'])
@@ -662,6 +659,11 @@ def __main__():
     m['formiga']        = load_obj_and_texture(
         'objetos/formiga/formiga.obj',
         ['objetos/formiga/Ant_Tris_Diffuse.png'])
+    
+    m['plaquinha']        = load_obj_and_texture(
+        'objetos/plaquinha/plaquinha.obj',
+        ['objetos/Ambiente/Coffe_Shop_Colour.png'])
+
 
     buffer_objects(program)
 
