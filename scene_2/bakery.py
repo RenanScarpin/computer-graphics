@@ -88,7 +88,9 @@ def load_model_from_file(filename):
 
     return {"vertices": vertices, "texture": texture_coords, "faces": faces}
 
-
+"""
+Return triangle groups from a circular face index list 
+"""
 def circular_sliding_window_of_three(arr):
     if len(arr) == 3:
         return arr
@@ -98,7 +100,9 @@ def circular_sliding_window_of_three(arr):
         result.extend(circular_arr[i:i+3])
     return result
 
-
+"""
+load an image file into an opengl texture 
+"""
 def load_texture_from_file(texture_id, img_path):
     glBindTexture(GL_TEXTURE_2D, texture_id)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
@@ -113,7 +117,9 @@ def load_texture_from_file(texture_id, img_path):
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height,
                  0, GL_RGB, GL_UNSIGNED_BYTE, image_data)
 
-
+"""
+load an obj model, append mesh data and create texture 
+"""
 def load_obj_and_texture(obj_file, textures_list):
 
     model = load_model_from_file(obj_file)
@@ -142,7 +148,9 @@ def load_obj_and_texture(obj_file, textures_list):
     return vertex_inicial, vertex_final - vertex_inicial, texture_ids
 
 
-# Buffer setup
+"""
+upload vertex and texture data then link to the shader 
+"""
 def buffer_objects(program):
     """Creates two VBOs — one for positions, one for texture coords — and
     wires them up to the shader's `position` and `texture_coord` attributes.
@@ -176,7 +184,12 @@ def buffer_objects(program):
     return buffer_VBO
 
 
-# Transformation matrices
+"""
+Transformation matrices
+"""
+
+# Build matrix from translation, rotation and scale 
+# Local space -> world space   
 def model_matrix(angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
     """Builds a model matrix as Translate · Rotate · Scale (applied in that
     order to the incoming point: first scale, then rotate, then translate).
@@ -192,18 +205,21 @@ def model_matrix(angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
 
     return np.array(matrix_transform)
 
-
+# Return the camera view matrix 
+# world space -> camera/view
 def view_matrix():
     return np.array(glm.lookAt(cameraPos, cameraPos + cameraFront, cameraUp))
 
-
+#Return the perspective projection matrix 
+# camera space -> clip space 
 def projection_matrix():
     return np.array(glm.perspective(glm.radians(fov),
                                     WIDTH / HEIGHT,
                                     0.01, 1000.0))
 
 
-# Drawing functions (one per model)
+# Object draw functions 
+#Each function draw one registered object applying the specific transformation
 def desenha_modelo(program, vertice_inicial, n_vertices, texture_id,
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
     """Generic textured-model draw call. Each per-object wrapper below just
@@ -373,22 +389,22 @@ def load_placements(filename, defaults):
                 continue
             parts = line.split()
             if len(parts) != 11:
-                print(f"[placements] {filename}:{line_no} skipped "
-                      f"(expected 11 fields, got {len(parts)})")
+                print(f"{filename}:{line_no} "
+                      f"({len(parts)})")
                 continue
             name = parts[0]
             try:
                 vals = tuple(float(x) for x in parts[1:])
             except ValueError as e:
-                print(f"[placements] {filename}:{line_no} skipped ({e})")
+                print(f"{filename}:{line_no} ({e})")
                 continue
             if name not in defaults:
-                print(f"[placements] {filename}:{line_no} unknown object "
-                      f"'{name}' — kept anyway in case you add it later.")
+                print(f"{filename}:{line_no}  "
+                      f"'{name}'")
             result[name] = vals
             loaded += 1
 
-    print(f"[placements] loaded {loaded} entries from {filename}.")
+    print(f" {loaded} from{filename}.")
     return result
 
 """
@@ -563,7 +579,7 @@ def key_event(window, key, scancode, action, mods):
         elif key == glfw.KEY_KP_7:
             _adjust_selected(scale_factor=1.0 / STEP_SCALE_FACTOR)
 
-
+# Resize opengl viewport to match the window 
 def framebuffer_size_callback(window, w, h):
     global WIDTH, HEIGHT
     WIDTH, HEIGHT = max(w, 1), max(h, 1)
