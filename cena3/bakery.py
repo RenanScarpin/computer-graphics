@@ -35,6 +35,8 @@ s_pao = 0
 STEP_TRANSLATION = 0.1
 STEP_SCALE_FACTOR = 1.1
 PLACEMENTS_FILE = 'placements.txt'
+# Scale factor applied to the interior copy of the bakery (adjustable)
+PADARIA_DENTRO_SCALE = 0.9
 
 """
 Current transform for each model 
@@ -273,6 +275,18 @@ def desenha_ambiente(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, 
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
 
+def desenha_padaria_dentro(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    """Draw the interior copy of the bakery using the same transform as
+    the exterior `ambiente` but scaled by `PADARIA_DENTRO_SCALE` (local tweak)."""
+    # Apply the same rotation/translation but scale down
+    desenha_modelo(
+        program,
+        m['padaria_dentro'][0], m['padaria_dentro'][1], m['padaria_dentro'][2][0],
+        angle, r_x, r_y, r_z, t_x, t_y, t_z,
+        s_x * PADARIA_DENTRO_SCALE, s_y * PADARIA_DENTRO_SCALE, s_z * PADARIA_DENTRO_SCALE,
+    )
+
+
 def desenha_mesa(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
     desenha_modelo(program, m['mesa'][0], m['mesa'][1], m['mesa'][2][0],
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
@@ -341,6 +355,7 @@ always assign the name for dictionary and draw function
 """
 OBJECTS_REGISTRY = [
     ('ambiente',    desenha_ambiente),
+    ('padaria_dentro', desenha_padaria_dentro),
     ('mesa',        desenha_mesa),
     ('bolo',        desenha_bolo),
     ('pao',         desenha_pao),
@@ -356,6 +371,7 @@ OBJECTS_REGISTRY = [
 ]
 
 INTERNAL_OBJECTS = {
+    'padaria_dentro',
     'mesa',
     'bolo',
     'pao',
@@ -410,6 +426,14 @@ def compute_default_placements(m):
         vertices_list, amb_start, amb_count
     )
     defaults['ambiente'] = (0.0, 0, 0, 0,  0.0, 0.0, 0.0,  1.0, 1.0, 1.0)
+    # interior copy defaults: same transform but scaled down
+    defaults['padaria_dentro'] = (
+        defaults['ambiente'][0], defaults['ambiente'][1], defaults['ambiente'][2], defaults['ambiente'][3],
+        defaults['ambiente'][4], defaults['ambiente'][5], defaults['ambiente'][6],
+        defaults['ambiente'][7] * PADARIA_DENTRO_SCALE,
+        defaults['ambiente'][8] * PADARIA_DENTRO_SCALE,
+        defaults['ambiente'][9] * PADARIA_DENTRO_SCALE,
+    )
 
     mesa_start, mesa_count, _ = m['mesa']
     _, mesa_max_x, _, mesa_max_y, _, mesa_max_z = calcula_min_max_objeto(
@@ -550,7 +574,7 @@ ambient_on = True
 light1_on = True
 light2_on = True
 
-ambient_intensity = 0.25
+ambient_intensity = 5.0
 diffuse_factor = 1.0
 specular_factor = 1.0
 
@@ -752,6 +776,10 @@ def __main__():
     m['ambiente']    = load_obj_and_texture(
         'objetos/Ambiente/Ambiente.obj',
         ['objetos/Ambiente/Coffe_Shop_Colour.png'])
+    # interior copy of the bakery (smaller, same transform as ambiente)
+    m['padaria_dentro'] = load_obj_and_texture(
+        'objetos/padaria_dentro/padaria_dentro.obj',
+        ['objetos/padaria_dentro/Coffe_Shop_Colour.png'])
     m['mesa']        = load_obj_and_texture(
         'objetos/mesa/mesa.obj',
         ['objetos/mesa/wood table1_DefaultMaterial_BaseColor.1001.png'])

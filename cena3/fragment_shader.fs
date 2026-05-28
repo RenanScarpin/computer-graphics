@@ -53,7 +53,11 @@ void main(){
 		atual_light = 0.0;
 	}
 
-	vec3 ambient = ka * vec3(1.0,1.0,1.0)*atual_light;
+	// ambient should not affect objects inside the interior scope
+	vec3 ambient = vec3(0.0);
+	if (!useInternalLights) {
+		ambient = ka * vec3(1.0,1.0,1.0) * atual_light;
+	}
 	vec3 lighting = ambient;
 
 	if (useInternalLights && light1On) {//so incrementa se a luz tiver acesa e se o objeto estiver no interior
