@@ -348,6 +348,10 @@ def desenha_desenho(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s
     desenha_modelo(program, m['desenho'][0], m['desenho'][1], m['desenho'][2][0],
                    angle+90, r_x, r_y+180, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
 
+def desenha_carro(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
+    global t_carro, roda_carro
+    desenha_modelo(program, m['carro'][0], m['carro'][1], m['carro'][2][0],
+                   angle+90, r_x, r_y+(90*roda_formiga), r_z, t_x+t_formiga, t_y, t_z, s_x, s_y, s_z)
 """
 Object registry 
 objects listed here are rendered 
@@ -367,7 +371,8 @@ OBJECTS_REGISTRY = [
     ('ceu',         desenha_ceu),
     ('formiga', desenha_formiga), 
     ('plaquinha', desenha_plaquinha), 
-    ('desenho', desenha_desenho)
+    ('desenho', desenha_desenho),
+    ('carro', desenha_carro)
 ]
 
 INTERNAL_OBJECTS = {
@@ -819,6 +824,9 @@ def __main__():
     m['desenho']        = load_obj_and_texture(
         'objetos/desenho/desenho.obj',
         ['objetos/desenho/sign_ao.png'])
+    m['carro']        = load_obj_and_texture(
+        'objetos/car/Car2.obj',
+        ['objetos/car/baked_texture.png'])
     
     buffer_objects(program)
 
