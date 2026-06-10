@@ -35,8 +35,6 @@ s_pao = 0
 STEP_TRANSLATION = 0.1
 STEP_SCALE_FACTOR = 1.1
 PLACEMENTS_FILE = 'placements.txt'
-# Scale factor applied to the interior copy of the bakery (adjustable)
-PADARIA_DENTRO_SCALE = 0.9
 
 """
 Current transform for each model 
@@ -60,26 +58,26 @@ def load_model_from_file(filename):
     faces = []
 
     material = None
-    # abre o arquivo obj para leitura
+    # opens file for reading
     for line in open(filename, "r", encoding="utf-8"):## para cada linha do arquivo .obj
-        if line.startswith('#'):## ignora comentarios
+        if line.startswith('#'):## ignores comments
             continue
-        values = line.split()# quebra a linha por espaço
+        values = line.split()# breaks lines
         if not values:
             continue
 
-        ### recuperando vertices
+        ### recover vertices
         if values[0] == 'v':
             vertices.append(values[1:4])
 
-        ### recuperando coordenadas de textura
+        ### recovers texture coordinates
         elif values[0] == 'vt':
             texture_coords.append(values[1:3])
         elif values[0] == 'vn':
             normals.append(values[1:4])
         elif values[0] in ('usemtl', 'usemat'):
             material = values[1]
-        ### recuperando faces 
+        ### recovers faces 
         elif values[0] == 'f':
             face = []
             face_texture = []
@@ -134,7 +132,7 @@ load an obj model, append mesh data and create texture
 def load_obj_and_texture(obj_file, textures_list):
 
     model = load_model_from_file(obj_file)
-    ### inserindo vertices do modelo no vetor de vertices
+    ### inserting vertices on vertice list
     vertex_inicial = len(vertices_list)
     print(f'Processing model {obj_file}. Initial vertex: {vertex_inicial}')
 
@@ -264,8 +262,12 @@ def desenha_modelo(program, vertice_inicial, n_vertices, texture_id,
     glBindTexture(GL_TEXTURE_2D, texture_id)
     glDrawArrays(GL_TRIANGLES, vertice_inicial, n_vertices)
 
-def set_internal_lighting_scope(program, enabled):
-    glUniform1i(glGetUniformLocation(program, "useInternalLights"), int(enabled))
+def set_object_light_profile(program, name):
+    """Envia o perfil (peso difuso/especular) do objeto para o shader, definindo
+    o quanto ele reage a cada componente de iluminacao."""
+    diff_w, spec_w = OBJECT_LIGHT_PROFILES.get(name, DEFAULT_LIGHT_PROFILE)
+    glUniform1f(glGetUniformLocation(program, "objDiffuse"), diff_w)
+    glUniform1f(glGetUniformLocation(program, "objSpecular"), spec_w)
 
 """
 function of drawing each object in a specific way
@@ -273,18 +275,6 @@ function of drawing each object in a specific way
 def desenha_ambiente(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
     desenha_modelo(program, m['ambiente'][0], m['ambiente'][1], m['ambiente'][2][0],
                    angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z)
-
-
-def desenha_padaria_dentro(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
-    """Draw the interior copy of the bakery using the same transform as
-    the exterior `ambiente` but scaled by `PADARIA_DENTRO_SCALE` (local tweak)."""
-    # Apply the same rotation/translation but scale down
-    desenha_modelo(
-        program,
-        m['padaria_dentro'][0], m['padaria_dentro'][1], m['padaria_dentro'][2][0],
-        angle, r_x, r_y, r_z, t_x, t_y, t_z,
-        s_x * PADARIA_DENTRO_SCALE, s_y * PADARIA_DENTRO_SCALE, s_z * PADARIA_DENTRO_SCALE,
-    )
 
 
 def desenha_mesa(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z):
@@ -352,14 +342,10 @@ def desenha_carro(program, m, angle, r_x, r_y, r_z, t_x, t_y, t_z, s_x, s_y, s_z
     global t_carro, roda_carro
     desenha_modelo(program, m['carro'][0], m['carro'][1], m['carro'][2][0],
                    angle+90, r_x, r_y+(90*roda_formiga), r_z, t_x+t_formiga, t_y, t_z, s_x, s_y, s_z)
-"""
-Object registry 
-objects listed here are rendered 
-always assign the name for dictionary and draw function 
-"""
+
+
 OBJECTS_REGISTRY = [
     ('ambiente',    desenha_ambiente),
-    ('padaria_dentro', desenha_padaria_dentro),
     ('mesa',        desenha_mesa),
     ('bolo',        desenha_bolo),
     ('pao',         desenha_pao),
@@ -375,21 +361,34 @@ OBJECTS_REGISTRY = [
     ('carro', desenha_carro)
 ]
 
-INTERNAL_OBJECTS = {
-    'padaria_dentro',
-    'mesa',
-    'bolo',
-    'pao',
-    'batedeira',
-    'luminaria',
-    'desenho', 
-}
 
-# Offset local aproximado entre a origem do modelo da luminaria e a lampada.
 LUMINARIA_LIGHT_OFFSET = (-0.01532, 8.0, 0.915223)
 DESENHO_LIGHT_LOCAL_CENTER = (0.015007, 10.3359, 3.64879)
 
-POSTE_LIGHT_OFFSET = ()
+
+POSTE_LIGHT_OFFSET = (0.15, 1.8, 0.0)
+
+CARRO_LIGHT_LOCAL_OFFSET = (1.2, 1.0, 3.5)
+
+
+
+# Center of inside box
+ambiente_center = (0.0, 0.0, 0.0)
+INSIDE_BOX_HALF_EXTENTS = (7.5, 6, 8.05)
+
+# Reflexion profiles for objects: (weight_diffuse, weight_specular).
+OBJECT_LIGHT_PROFILES = {
+    'batedeira':      (0.25, 1.0),
+    'desenho':        (0.25, 1.0),
+    'luminaria':      (0.25, 1.0),
+    'pao':            (1.0, 0.2),   # -> + diffuse
+    'bolo':           (1.0, 0.2),
+    'poste_luz':      (0.5, 1.0),  # -> + specular
+    'carro':          (0.25, 1.0),
+    'formiga':        (1.0, 0.2),   # -> + diffuse
+    'plaquinha':      (1.0, 0.2),
+}
+DEFAULT_LIGHT_PROFILE = (2.0, 1.0)
 
 def object_light_position(name, offset=(0.0, 0.0, 0.0)):
     _, _, _, _, tx, ty, tz, _, _, _ = placements[name]
@@ -414,6 +413,26 @@ def transformed_object_point(name, local_point=(0.0, 0.0, 0.0),
     point = matrix_transform * glm.vec4(local_point[0], local_point[1], local_point[2], 1.0)
     return point.x, point.y, point.z
 
+def carro_headlight_positions():
+    """Posicoes dos dois farois do carro. O offset local e espelhado no eixo X
+    local (carro simetrico) e transformado pelo model matrix do carro, da mesma
+    forma que o desenho usa transformed_object_point."""
+    x, y, z = CARRO_LIGHT_LOCAL_OFFSET
+    axis = (0.0, 90.0 * roda_formiga, 0.0)
+    left = transformed_object_point('carro', (x, y, z),
+                                    angle_offset=90.0, axis_offset=axis)
+    right = transformed_object_point('carro', (-x, y, z),
+                                     angle_offset=90.0, axis_offset=axis)
+    return left, right
+
+def camera_is_inside():
+    """True quando a camera esta dentro da caixa centrada no ambiente."""
+    cx, cy, cz = ambiente_center
+    hx, hy, hz = INSIDE_BOX_HALF_EXTENTS
+    return (abs(cameraPos.x - cx) <= hx and
+            abs(cameraPos.y - cy) <= hy and
+            abs(cameraPos.z - cz) <= hz)
+
 """
 Return the original default placement for each object
 
@@ -431,14 +450,6 @@ def compute_default_placements(m):
         vertices_list, amb_start, amb_count
     )
     defaults['ambiente'] = (0.0, 0, 0, 0,  0.0, 0.0, 0.0,  1.0, 1.0, 1.0)
-    # interior copy defaults: same transform but scaled down
-    defaults['padaria_dentro'] = (
-        defaults['ambiente'][0], defaults['ambiente'][1], defaults['ambiente'][2], defaults['ambiente'][3],
-        defaults['ambiente'][4], defaults['ambiente'][5], defaults['ambiente'][6],
-        defaults['ambiente'][7] * PADARIA_DENTRO_SCALE,
-        defaults['ambiente'][8] * PADARIA_DENTRO_SCALE,
-        defaults['ambiente'][9] * PADARIA_DENTRO_SCALE,
-    )
 
     mesa_start, mesa_count, _ = m['mesa']
     _, mesa_max_x, _, mesa_max_y, _, mesa_max_z = calcula_min_max_objeto(
@@ -578,16 +589,20 @@ def _adjust_selected(d_tx=0.0, d_ty=0.0, d_tz=0.0, scale_factor=1.0):
 ambient_on = True
 light1_on = True
 light2_on = True
+light3_on = True
+light4_on = True
 
-ambient_intensity = 5.0
-diffuse_factor = 1.0
+ambient_intensity = 2.0
+diffuse_factor = 2.0
 specular_factor = 1.0
 
 """
 Captures keyboard events:
 0 -> Changes ambient light state (on/off)
-1 -> Changes light state 1 (lamp) - (on/off)
-2 -> Changes light state 2 (wall plate) - (on/off)
+1 -> Changes light state 1 (lamp / luminaria) - (on/off)
+2 -> Changes light state 2 (wall sign / desenho) - (on/off)
+3 -> Changes light state 3 (street lamp / poste_luz) - (on/off)
+4 -> Changes light state 4 (car headlights / carro - both) - (on/off)
 Z -> Decreases ambient intensity
 X -> Increases ambient intensity
 C -> Decreases diffuse reflection
@@ -599,8 +614,9 @@ def key_event(window, key, scancode, action, mods):
     
     global cameraPos, cameraFront, cameraUp, polygonal_mode
     global selected_idx
-    global ambient_on, light1_on, light2_on
+    global ambient_on, light1_on, light2_on, light3_on, light4_on
     global ambient_intensity, diffuse_factor, specular_factor
+    global t_formiga, roda_formiga
 
     if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
         glfw.set_window_should_close(window, True)
@@ -616,50 +632,69 @@ def key_event(window, key, scancode, action, mods):
     if key == glfw.KEY_D and (action == glfw.PRESS or action == glfw.REPEAT):
         cameraPos += glm.normalize(glm.cross(cameraFront, cameraUp)) * cameraSpeed
     
-    # Liga/desliga luz ambiente
+    # Toggles ambient light
     if key == glfw.KEY_0 and (action == glfw.PRESS):
         ambient_on = not ambient_on
         print("Ambiente:", "ligada" if ambient_on else "desligada")
 
-    # Liga/desliga luz interna 1
+    # Toggles light 1
     elif key == glfw.KEY_1 and (action == glfw.PRESS):
         light1_on = not light1_on
         print("Luz 1:", "ligada" if light1_on else "desligada")
 
-    # Liga/desliga luz interna 2
+    # Toggles light 2
     elif key == glfw.KEY_2 and (action == glfw.PRESS):
         light2_on = not light2_on
         print("Luz 2:", "ligada" if light2_on else "desligada")
 
-    # Diminui intensidade ambiente
+    # Turns on and off postlamp (light 3)
+    elif key == glfw.KEY_3 and (action == glfw.PRESS):
+        light3_on = not light3_on
+        print("Luz 3 (poste):", "ligada" if light3_on else "desligada")
+
+    # Turns on and off car headlights (light 4)
+    elif key == glfw.KEY_4 and (action == glfw.PRESS):
+        light4_on = not light4_on
+        print("Luz 4 (farois):", "ligada" if light4_on else "desligada")
+
+    # Decreases ambient light intensity
     elif key == glfw.KEY_Z and (action == glfw.PRESS or action == glfw.REPEAT):
         ambient_intensity = max(0.0, ambient_intensity - 0.05)
         print("ambient_intensity =", ambient_intensity)
 
-    #aumenta intensidade ambiente
+    # Increases ambient light intensity
     elif key == glfw.KEY_X and (action == glfw.PRESS or action == glfw.REPEAT):
         ambient_intensity += 0.05
         print("ambient_intensity =", ambient_intensity)
     
-    # Diminui reflexão difusa
+    # Decreases diffuse reflexion
     elif key == glfw.KEY_C and (action == glfw.PRESS or action == glfw.REPEAT):
         diffuse_factor = max(0.0, diffuse_factor - 0.05)
         print("diffuse_factor =", diffuse_factor)
 
-    #Aumenta reflexão difusa
+    # Increases diffuse reflexion
     elif key == glfw.KEY_V and (action == glfw.PRESS or action == glfw.REPEAT):
         diffuse_factor += 0.05
         print("diffuse_factor =", diffuse_factor)
 
-    # Diminui reflexão especular
+    # Decreases specular reflexion
     elif key == glfw.KEY_B and (action == glfw.PRESS or action == glfw.REPEAT):
         specular_factor = max(0.0, specular_factor - 0.05)
         print("specular_factor =", specular_factor)
 
-    #Aumenta reflexão especular 
+    # Increases specular reflexion 
     elif key == glfw.KEY_N and (action == glfw.PRESS or action == glfw.REPEAT):
         specular_factor += 0.05
         print("specular_factor =", specular_factor) 
+    
+    # Moves ant and car
+    elif key == glfw.KEY_L and (action == glfw.PRESS or action == glfw.REPEAT):
+        t_formiga = max(0.0, t_formiga - 0.05)
+        roda_formiga = 1
+
+    elif key == glfw.KEY_K and (action == glfw.PRESS or action == glfw.REPEAT):
+        t_formiga += 0.05 
+        roda_formiga = 0
        
 
     # ensure that camera doesn't pass from both sky or floor  
@@ -781,10 +816,6 @@ def __main__():
     m['ambiente']    = load_obj_and_texture(
         'objetos/Ambiente/Ambiente.obj',
         ['objetos/Ambiente/Coffe_Shop_Colour.png'])
-    # interior copy of the bakery (smaller, same transform as ambiente)
-    m['padaria_dentro'] = load_obj_and_texture(
-        'objetos/padaria_dentro/padaria_dentro.obj',
-        ['objetos/padaria_dentro/Coffe_Shop_Colour.png'])
     m['mesa']        = load_obj_and_texture(
         'objetos/mesa/mesa.obj',
         ['objetos/mesa/wood table1_DefaultMaterial_BaseColor.1001.png'])
@@ -825,21 +856,28 @@ def __main__():
         'objetos/desenho/desenho.obj',
         ['objetos/desenho/sign_ao.png'])
     m['carro']        = load_obj_and_texture(
-        'objetos/car/Car2.obj',
+        'objetos/car/car3.obj',
         ['objetos/car/baked_texture.png'])
     
     buffer_objects(program)
 
-    """
-    start with default placements then apply saved changes from placements 
-    """
-    global placements
+    #start with default placements then apply saved changes from placements 
+    global placements, ambiente_center
     defaults = compute_default_placements(m)
     placements = load_placements(PLACEMENTS_FILE, defaults)
 
-    """
-    Camera 
-    """
+    # Center of coffe shop
+    amb_start, amb_count, _ = m['ambiente']
+    a_minx, a_maxx, a_miny, a_maxy, a_minz, a_maxz = calcula_min_max_objeto(
+        vertices_list, amb_start, amb_count)
+    _, _, _, _, atx, aty, atz, _, _, _ = placements['ambiente']
+    ambiente_center = (
+        (a_minx + a_maxx) / 2.0 + atx,
+        (a_miny + a_maxy) / 2.0 + aty,
+        (a_minz + a_maxz) / 2.0 + atz,
+    )
+
+    
     cameraPos   = glm.vec3(0.0, 1.5, 4.0)
     cameraFront = glm.vec3(0.0, 0.0, -1.0)
     cameraUp    = glm.vec3(0.0, 1.0, 0.0)
@@ -919,19 +957,37 @@ def __main__():
         glUniform1f(glGetUniformLocation(program, "diffuseFactor"), diffuse_factor)
         glUniform1f(glGetUniformLocation(program, "specularFactor"), specular_factor)
 
+        # Inside/outside the coffeshop
+        glUniform1i(glGetUniformLocation(program, "cameraInside"), int(camera_is_inside()))
+
+        # Light 3 -> postlamp (external)
+        lx3, ly3, lz3 = object_light_position('poste_luz', POSTE_LIGHT_OFFSET)
+        glUniform3f(glGetUniformLocation(program, "lightPos3"), lx3, ly3, lz3)
+        glUniform1i(glGetUniformLocation(program, "light3On"), int(light3_on))
+
+        # Lights 4 and 5 -> car headlights (external, always mirrored).
+        # The 4 toggles both headlights together
+        if 'carro' in placements:
+            farol_esq, farol_dir = carro_headlight_positions()
+            glUniform3f(glGetUniformLocation(program, "lightPos4"),
+                        farol_esq[0] + t_formiga, farol_esq[1], farol_esq[2])
+            glUniform3f(glGetUniformLocation(program, "lightPos5"),
+                        farol_dir[0] + t_formiga, farol_dir[1], farol_dir[2])
+        glUniform1i(glGetUniformLocation(program, "light4On"), int(light4_on))
+        glUniform1i(glGetUniformLocation(program, "light5On"), int(light4_on))
+
 
         glUniform3f(glGetUniformLocation(program, "viewPos"), cameraPos.x, cameraPos.y, cameraPos.z)
 
-        """
-        Draw each object with its current placement 
-        """
+
+        #Draw each object with its current placement 
         for name, draw_func in OBJECTS_REGISTRY:
             vals = placements.get(name)
             #skip objects without placement 
             if vals is None:
                 continue
             angle, rx, ry, rz, tx, ty, tz, sx, sy, sz = vals
-            set_internal_lighting_scope(program, name in INTERNAL_OBJECTS)
+            set_object_light_profile(program, name)
             draw_func(program, m, angle, rx, ry, rz, tx, ty, tz, sx, sy, sz)
 
         glfw.swap_buffers(window)
