@@ -10,9 +10,9 @@ For scene one we couldn't use camera, textures or shaders and we self-imposed th
 
 # Scene 2 
 
-This project is a scene developed in Python using OpenGL, the scne represents a small coofee shop environment with multiple texture objects, camera movement and keyboard interactions. 
+This project is a scene developed in Python using OpenGL, the scene represents a small coofee shop environment with multiple texture objects, camera movement and keyboard interactions. 
 
-# Composition 
+## Composition 
 
 - Textured '.obj' models
 - Camera movement using keyboard and mouse
@@ -30,9 +30,9 @@ This project is a scene developed in Python using OpenGL, the scne represents a 
   * Floor and sky
 - Object placement using `placements.txt`
 
-# Controls 
+## Controls 
 
-## Camera
+### Camera
 
 | Key/Mouse | Action | 
 |----------|---------|
@@ -41,7 +41,7 @@ This project is a scene developed in Python using OpenGL, the scne represents a 
 | `A` | Move left |
 | `D` | Move right |
 
-## Object interaction 
+### Object interaction 
 
 | Key/Mouse | Action | 
 |----------|---------|
@@ -52,8 +52,67 @@ This project is a scene developed in Python using OpenGL, the scne represents a 
 | `Right Arrow` | Move the ant right |
 | `P` | mesh mode |
 
-# Run 
+## Run 
 If you want to run using virtual environment, can just use `requirements.txt` to install the required libraries.
 
 
 ![Scene 2 screenshot](scene_2/images/t2.png)
+
+# Scene 3
+
+This project is a scene developed in Python using OpenGL, the scene represents a small coofee shop environment with multiple texture objects, camera movement and keyboard interactions. Scene 3 has added lighting to scene 2
+
+## Composition 
+
+- Textured '.obj' models
+- Camera movement using keyboard and mouse
+- Perspective, projection and view matrix control
+- Multiple objects in the scene:
+  * Bakery environment
+  * Table
+  * Cake
+  * Bread
+  * Mixer
+  * Lamp
+  * Flower
+  * Ant
+  * Light pole
+  * Floor and sky
+- Object placement using `placements.txt`
+
+## Controls 
+
+### Camera
+
+| Key/Mouse | Action | 
+|----------|---------|
+| `W` | Move forward |
+| `S` | Move backward |
+| `A` | Move left |
+| `D` | Move right |
+
+### Object interaction 
+
+| Key/Mouse | Action | 
+|----------|---------|
+| `B` | Rotate the cake |
+| `F` | Rotate the Flower |
+| `T` | Scale and move the bread |
+| `K` | Move the ant and the car left  |
+| `L` | Move the ant and the car right |
+| `P` | mesh mode |
+| `1` | Toggle inside lamp light |
+| `2` | Toggle inside neon sign light |
+| `3` | Toggle outside lamp post light |
+| `4` | Toggle car headlights light  |
+| `0` | Toggle global ambient light |
+| `N` | Decreases specular reflexion  |
+| `B` | Increases specular reflexion |
+| `C` | Decreases diffuse reflexion  |
+| `V` | Increases diffuse reflexion |
+| `Z` | Decreases ambient light intensity  |
+| `X` | Increases ambient light intensity |
+
+
+## Run 
+If you want to run using virtual environment, can just use `requirements.txt` to install the required libraries.

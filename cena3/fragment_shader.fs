@@ -44,8 +44,8 @@ uniform float specularFactor;
 float light1Intensity = 3.0;
 float light2Intensity = 3.0;
 float light3Intensity = 3.0;
-float light4Intensity = 2.5;
-float light5Intensity = 2.5;
+float light4Intensity = 1.5;
+float light5Intensity = 1.5;
 
 // parameters received from the vertex shader
 in vec3 out_normal; // received from the vertex shader
