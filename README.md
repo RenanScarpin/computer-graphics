@@ -95,9 +95,6 @@ This project is a scene developed in Python using OpenGL, the scene represents a
 
 | Key/Mouse | Action | 
 |----------|---------|
-| `B` | Rotate the cake |
-| `F` | Rotate the Flower |
-| `T` | Scale and move the bread |
 | `K` | Move the ant and the car left  |
 | `L` | Move the ant and the car right |
 | `P` | mesh mode |

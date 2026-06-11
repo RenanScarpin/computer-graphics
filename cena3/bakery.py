@@ -374,7 +374,7 @@ CARRO_LIGHT_LOCAL_OFFSET = (1.2, 1.0, 3.5)
 
 # Center of inside box
 ambiente_center = (0.0, 0.0, 0.0)
-INSIDE_BOX_HALF_EXTENTS = (7.5, 6, 8.05)
+INSIDE_BOX_HALF_EXTENTS = (7.5, 6, 8.085)
 
 # Reflexion profiles for objects: (weight_diffuse, weight_specular).
 OBJECT_LIGHT_PROFILES = {
